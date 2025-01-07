@@ -13,7 +13,14 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
+    - uses: actions/cache@4.2.0
+      with:
+        path: |
+          ./build/* 
+          ./ninja
     - name: install lua and gcc
       run: sudo apt install -y gcc lua5.4
+    - name: setup
+      run: ./ci.sh setup
     - name: build
-      run: ./ci.sh
+      run: ./ci.sh build
