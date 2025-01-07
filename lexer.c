@@ -131,7 +131,7 @@ loc pos_to_loc(lexer *l, u32 pos) {
                  .pos    = pos};
 }
 
-void __attribute__((__format__(__printf__, 2, 3))) error(lexer      *l,
+void PRINTF_FORMAT(2, 3) error(lexer      *l,
                                                          char const *fmt, ...) {
     va_list arg;
     va_start(arg, fmt);
@@ -287,7 +287,7 @@ lexer *lexer_new(str input) {
     return lexer_new_ex(input, default_error_callback);
 }
 
-lexer *lexer_new_ex(str input, error_callback ec) {
+lexer *lexer_new_ex(str input, lexer_error_callback ec) {
     init_keywords();
     lexer *l = xmalloc(sizeof(struct lexer));
 

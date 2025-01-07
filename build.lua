@@ -39,12 +39,17 @@ local function build(output, inputs, r)
 end
 
 --> Build Configuration --
-local files = { "main.c", "lexer.c", "utf8proc.c", "str.c", "ast.c" }
+local files = { "main.c", "lexer.c", "utf8proc.c", "str.c", "ast.c", "parser.c" }
 local target = "build/rbc"
+local compiler = "clang"
+local cflags = "-g -std=c11 -O2 -Wall -Wextra -Wpedantic"
+
+if compiler == "clang" then
+	cflags = cflags .. " -Wno-nullability-extension" -- we can ignore the warning about the nullability extension because we only add it for clang.
+end
 
 var("ninja_required_version", "1.2")
-
-var("cflags", "-g -std=c11 -O2 -Wall -Wextra -Wpedantic") -- Flags passed to gcc
+var("cflags", cflags) -- Flags passed to gcc
 var("ldflags", "") -- Flags passed to gcc when linking
 --< Build Configuration --
 
@@ -66,12 +71,12 @@ local compdb = rule("compdb", {
 	command = "ninja -t compdb > $out",
 })
 local cc = rule("cc", {
-	command = "gcc $cflags -c $in -o $out -MD -MF $out.d",
+	command = compiler .. " $cflags -c $in -o $out -MD -MF $out.d",
 	depfile = "$out.d",
 	deps = "gcc",
 })
 local ld = rule("ld", {
-	command = "gcc $ldflags $in -o $out",
+	command = compiler .. " $ldflags $in -o $out",
 })
 
 for _, to_build in ipairs(files_to_build) do

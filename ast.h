@@ -3,7 +3,7 @@
 #include <stddef.h>
 #include "lexer.h"
 // AST
-typedef struct AST  AST;
+typedef struct program program;
 
 // Statements
 typedef struct stmt stmt;
@@ -18,7 +18,7 @@ typedef struct expr_list_buffer {
 } expr_list_buffer;
 
 expr_list_buffer expr_list_buffer_new(size_t initial_cap);
-void expr_list_buffer_push(expr_list_buffer *buffer, expr *expr);
+void             expr_list_buffer_push(expr_list_buffer *buffer, expr *expr);
 // Frees the buffer itself, not the expr it contains
 void expr_list_buffer_free(expr_list_buffer buffer);
 // Frees the buffer and all the expr it contains
@@ -33,8 +33,8 @@ typedef struct expr_list {
 expr_list expr_list_new(expr_list_buffer const buffer);
 void      expr_list_free(expr_list list);
 
-struct AST {
-    struct stmt_function *main_function;
+struct program {
+    struct stmt *main_function;
 };
 
 struct stmt {
@@ -43,6 +43,7 @@ struct stmt {
     } tag;
     union {
         struct stmt_function {
+            str   name;
             expr *body;
         } stmt_function;
     } data;

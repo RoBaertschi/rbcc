@@ -55,7 +55,7 @@ typedef struct tokens {
     size_t len;
 } tokens;
 
-typedef void (*error_callback)(loc loc, char const *fmt, va_list arg);
+typedef void (*lexer_error_callback)(loc loc, char const *fmt, va_list arg);
 typedef struct lexer {
     u32              pos;
     u32              read_pos;
@@ -67,11 +67,11 @@ typedef struct lexer {
     str              file;
 
     u32              errors;
-    error_callback   ec;
+    lexer_error_callback   ec;
 } lexer;
 
 token  lexer_scan_token(lexer *l);
 
 lexer *lexer_new(str input);
-lexer *lexer_new_ex(str input, error_callback ec);
+lexer *lexer_new_ex(str input, lexer_error_callback ec);
 void   lexer_free(lexer *l);

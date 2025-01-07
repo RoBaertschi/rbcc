@@ -8,6 +8,20 @@
 #include <stdlib.h>
 #include <string.h>
 
+#if defined(__GNUC__) || defined(__clang__)
+#define PRINTF_FORMAT(x, y) __attribute__((__format__(__printf__, x, y)))
+#else
+#define PRINTF_FORMAT(x, y)
+#endif
+
+#ifdef __clang__
+#define NULLABLE _Nullable
+#define NONNULL _Nonnull
+#else
+#define NULLABLE
+#define NONNULL
+#endif
+
 typedef uint8_t  u8;
 typedef uint16_t u16;
 typedef uint32_t u32;
@@ -32,7 +46,7 @@ static_assert(sizeof(u8) == sizeof(char),
                 strerror(errno));                                         \
         abort();                                                          \
     }
-inline void *xmalloc(size_t size) {
+inline void *NONNULL xmalloc(size_t size) {
     void *result = malloc(size);
     CHECK_ALLOC(result);
     return result;
@@ -59,5 +73,6 @@ typedef struct str_slice {
 
 #define S(s) (str){.data = s, .len = sizeof(s) - 1}
 
+str  str_slice_clone(str_slice slice);
 str  str_clone(str s);
 void str_free(str s);
