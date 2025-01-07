@@ -14,12 +14,13 @@ typedef struct expr expr;
 
 typedef struct expr_list_buffer {
     expr *NONNULL *NULLABLE data;
-    size_t                   len;
-    size_t                   cap;
+    size_t                  len;
+    size_t                  cap;
 } expr_list_buffer;
 
 expr_list_buffer expr_list_buffer_new(size_t initial_cap);
-void             expr_list_buffer_push(expr_list_buffer *NONNULL buffer, expr *NULLABLE expr);
+void             expr_list_buffer_push(expr_list_buffer *NONNULL buffer,
+                                       expr *NULLABLE            expr);
 // Frees the buffer itself, not the expr it contains
 void expr_list_buffer_free(expr_list_buffer buffer);
 // Frees the buffer and all the expr it contains
@@ -27,7 +28,7 @@ void expr_list_buffer_free_all(expr_list_buffer buffer);
 
 typedef struct expr_list {
     expr *NONNULL *NULLABLE data;
-    size_t len;
+    size_t                  len;
 } expr_list;
 
 void expr_list_print(expr_list *NONNULL list);
@@ -39,9 +40,9 @@ struct program {
     struct stmt *NULLABLE main_function;
 };
 
-void     program_print(program *NONNULL prog);
+void             program_print(program *NONNULL prog);
 program *NONNULL program_new(program prog);
-void     program_free(program *NULLABLE prog);
+void             program_free(program *NULLABLE prog);
 
 struct stmt {
     enum {

@@ -5,7 +5,7 @@
 #include <string.h>
 #include "rbcc.h"
 
-void     program_print(program *NONNULL prog) {
+void program_print(program *NONNULL prog) {
     printf("program(");
     if (prog->main_function) {
         stmt_print(prog->main_function);
@@ -17,7 +17,7 @@ void     program_print(program *NONNULL prog) {
 
 program *program_new(program prog) {
     program *ptr = xmalloc(sizeof(program));
-    *ptr = prog;
+    *ptr         = prog;
     return ptr;
 }
 
@@ -29,7 +29,7 @@ void program_free(program *NULLABLE prog) {
     free(prog);
 }
 
-void  stmt_print(stmt *NONNULL ptr) {
+void stmt_print(stmt *NONNULL ptr) {
     stmt s = *ptr;
     switch (s.tag) {
         case stmt_function: {
@@ -42,7 +42,7 @@ void  stmt_print(stmt *NONNULL ptr) {
     }
 }
 
-stmt *stmt_new(stmt s) {
+stmt *NONNULL stmt_new(stmt s) {
     stmt *ptr = xmalloc(sizeof(stmt));
     *ptr      = s;
     return ptr;
@@ -70,7 +70,7 @@ expr_list_buffer expr_list_buffer_new(size_t initial_cap) {
     return (expr_list_buffer){
         .len  = 0,
         .cap  = initial_cap,
-        .data =  xmalloc(sizeof(expr *) * initial_cap),
+        .data = xmalloc(sizeof(expr *) * initial_cap),
     };
 }
 
@@ -117,7 +117,7 @@ void expr_list_free(expr_list list) {
     free(list.data);
 }
 
-void  expr_print(expr *NONNULL ptr) {
+void expr_print(expr *NONNULL ptr) {
     expr e = *ptr;
     switch (e.tag) {
         case expr_string: {

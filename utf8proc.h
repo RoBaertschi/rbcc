@@ -155,34 +155,34 @@ extern "C" {
  */
 typedef enum {
     /** The given UTF-8 input is NULL terminated. */
-    UTF8PROC_NULLTERM  = (1 << 0),
+    UTF8PROC_NULLTERM = (1 << 0),
     /** Unicode Versioning Stability has to be respected. */
-    UTF8PROC_STABLE    = (1 << 1),
+    UTF8PROC_STABLE = (1 << 1),
     /** Compatibility decomposition (i.e. formatting information is lost). */
-    UTF8PROC_COMPAT    = (1 << 2),
+    UTF8PROC_COMPAT = (1 << 2),
     /** Return a result with decomposed characters. */
-    UTF8PROC_COMPOSE   = (1 << 3),
+    UTF8PROC_COMPOSE = (1 << 3),
     /** Return a result with decomposed characters. */
     UTF8PROC_DECOMPOSE = (1 << 4),
     /** Strip "default ignorable characters" such as SOFT-HYPHEN or
        ZERO-WIDTH-SPACE. */
-    UTF8PROC_IGNORE    = (1 << 5),
+    UTF8PROC_IGNORE = (1 << 5),
     /** Return an error, if the input contains unassigned codepoints. */
-    UTF8PROC_REJECTNA  = (1 << 6),
+    UTF8PROC_REJECTNA = (1 << 6),
     /**
      * Indicating that NLF-sequences (LF, CRLF, CR, NEL) are representing a
      * line break, and should be converted to the codepoint for line
      * separation (LS).
      */
-    UTF8PROC_NLF2LS    = (1 << 7),
+    UTF8PROC_NLF2LS = (1 << 7),
     /**
      * Indicating that NLF-sequences are representing a paragraph break, and
      * should be converted to the codepoint for paragraph separation
      * (PS).
      */
-    UTF8PROC_NLF2PS    = (1 << 8),
+    UTF8PROC_NLF2PS = (1 << 8),
     /** Indicating that the meaning of NLF-sequences is unknown. */
-    UTF8PROC_NLF2LF    = (UTF8PROC_NLF2LS | UTF8PROC_NLF2PS),
+    UTF8PROC_NLF2LF = (UTF8PROC_NLF2LS | UTF8PROC_NLF2PS),
     /** Strips and/or convers control characters.
      *
      * NLF-sequences are transformed into space, except if one of the
@@ -190,12 +190,12 @@ typedef enum {
      * are treated as a NLF-sequence in this case.  All other control
      * characters are simply removed.
      */
-    UTF8PROC_STRIPCC   = (1 << 9),
+    UTF8PROC_STRIPCC = (1 << 9),
     /**
      * Performs unicode case folding, to be able to do a case-insensitive
      * string comparison.
      */
-    UTF8PROC_CASEFOLD  = (1 << 10),
+    UTF8PROC_CASEFOLD = (1 << 10),
     /**
      * Inserts 0xFF bytes at the beginning of each sequence which is
      * representing a single grapheme cluster (see UAX#29).
@@ -209,7 +209,7 @@ typedef enum {
      * If NLF2LF is set, this includes a transformation of paragraph and
      * line separators to ASCII line-feed (LF).
      */
-    UTF8PROC_LUMP      = (1 << 12),
+    UTF8PROC_LUMP = (1 << 12),
     /** Strips all character markings.
      *
      * This includes non-spacing, spacing and enclosing (i.e. accents).
@@ -220,7 +220,7 @@ typedef enum {
     /**
      * Strip unassigned codepoints.
      */
-    UTF8PROC_STRIPNA   = (1 << 14),
+    UTF8PROC_STRIPNA = (1 << 14),
 } utf8proc_option_t;
 
 /** @name Error codes
@@ -302,30 +302,30 @@ typedef struct utf8proc_property_struct {
      * so, the `comb_length` table entries will be checked sequentially
      * for a match.
      */
-    utf8proc_uint16_t  comb_index           : 10;
-    utf8proc_uint16_t  comb_length          : 5;
-    utf8proc_uint16_t  comb_issecond        : 1;
-    unsigned           bidi_mirrored        : 1;
-    unsigned           comp_exclusion       : 1;
+    utf8proc_uint16_t comb_index     : 10;
+    utf8proc_uint16_t comb_length    : 5;
+    utf8proc_uint16_t comb_issecond  : 1;
+    unsigned          bidi_mirrored  : 1;
+    unsigned          comp_exclusion : 1;
     /**
      * Can this codepoint be ignored?
      *
      * Used by utf8proc_decompose_char() when @ref UTF8PROC_IGNORE is
      * passed as an option.
      */
-    unsigned           ignorable            : 1;
-    unsigned           control_boundary     : 1;
+    unsigned ignorable        : 1;
+    unsigned control_boundary : 1;
     /** The width of the codepoint. */
-    unsigned           charwidth            : 2;
+    unsigned charwidth : 2;
     /** East Asian width class A */
-    unsigned           ambiguous_width      : 1;
-    unsigned           pad                  : 1;
+    unsigned ambiguous_width : 1;
+    unsigned pad             : 1;
     /**
      * Boundclass.
      * @see utf8proc_boundclass_t.
      */
-    unsigned           boundclass           : 6;
-    unsigned           indic_conjunct_break : 2;
+    unsigned boundclass           : 6;
+    unsigned indic_conjunct_break : 2;
 } utf8proc_property_t;
 
 /** Unicode categories. */
@@ -429,10 +429,10 @@ typedef enum {
 
     /* the following are no longer used in Unicode 11, but we keep
        the constants here for backward compatibility */
-    UTF8PROC_BOUNDCLASS_E_BASE             = 15, /**< Emoji Base */
-    UTF8PROC_BOUNDCLASS_E_MODIFIER         = 16, /**< Emoji Modifier */
-    UTF8PROC_BOUNDCLASS_GLUE_AFTER_ZWJ     = 17, /**< Glue_After_ZWJ */
-    UTF8PROC_BOUNDCLASS_E_BASE_GAZ         = 18, /**< E_BASE + GLUE_AFTER_ZJW */
+    UTF8PROC_BOUNDCLASS_E_BASE         = 15, /**< Emoji Base */
+    UTF8PROC_BOUNDCLASS_E_MODIFIER     = 16, /**< Emoji Modifier */
+    UTF8PROC_BOUNDCLASS_GLUE_AFTER_ZWJ = 17, /**< Glue_After_ZWJ */
+    UTF8PROC_BOUNDCLASS_E_BASE_GAZ     = 18, /**< E_BASE + GLUE_AFTER_ZJW */
 
     /* the Extended_Pictographic property is used in the Unicode 11
        grapheme-boundary rules, so we store it in the boundclass field */
@@ -468,12 +468,12 @@ UTF8PROC_DLLEXPORT extern const utf8proc_int8_t utf8proc_utf8class[256];
  * (http://semver.org format), possibly with a "-dev" suffix for
  * development versions.
  */
-UTF8PROC_DLLEXPORT const char                  *utf8proc_version(void);
+UTF8PROC_DLLEXPORT const char *utf8proc_version(void);
 
 /**
  * Returns the utf8proc supported Unicode version as a string MAJOR.MINOR.PATCH.
  */
-UTF8PROC_DLLEXPORT const char                  *utf8proc_unicode_version(void);
+UTF8PROC_DLLEXPORT const char *utf8proc_unicode_version(void);
 
 /**
  * Returns an informative error string for the given utf8proc error code
@@ -717,13 +717,13 @@ UTF8PROC_DLLEXPORT utf8proc_int32_t utf8proc_totitle(utf8proc_int32_t c);
  * Given a codepoint `c`, return `1` if the codepoint corresponds to a
  * lower-case character and `0` otherwise.
  */
-UTF8PROC_DLLEXPORT int              utf8proc_islower(utf8proc_int32_t c);
+UTF8PROC_DLLEXPORT int utf8proc_islower(utf8proc_int32_t c);
 
 /**
  * Given a codepoint `c`, return `1` if the codepoint corresponds to an
  * upper-case character and `0` otherwise.
  */
-UTF8PROC_DLLEXPORT int              utf8proc_isupper(utf8proc_int32_t c);
+UTF8PROC_DLLEXPORT int utf8proc_isupper(utf8proc_int32_t c);
 
 /**
  * Given a codepoint, return a character width analogous to

@@ -46,6 +46,7 @@ static_assert(sizeof(u8) == sizeof(char),
                 strerror(errno));                                         \
         abort();                                                          \
     }
+
 inline void *NONNULL xmalloc(size_t size) {
     void *result = malloc(size);
     CHECK_ALLOC(result);
@@ -71,7 +72,8 @@ typedef struct str_slice {
     size_t       len;
 } str_slice;
 
-#define S(s) (str){.data = s, .len = sizeof(s) - 1}
+#define S(s) \
+    (str) { .data = s, .len = sizeof(s) - 1 }
 
 str  str_slice_clone(str_slice slice);
 str  str_clone(str s);

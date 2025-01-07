@@ -50,9 +50,9 @@ int main(int argc, char **argv) {
                   .len  = str_len,
         };
 
-        lexer  *l = lexer_new(input);
+        lexer   *l       = lexer_new(input);
 
-        parser *p = parser_new(l);
+        parser  *p       = parser_new(l);
 
         program *program = parse_program(p);
         program_print(program);
