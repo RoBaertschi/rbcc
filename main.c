@@ -20,7 +20,7 @@ int main(int argc, char **argv) {
         size_t str_len = 0;
         while (true) {
             char   buffer[BUFFER_SIZE];
-            size_t read = fread(buffer, 1, BUFFER_SIZE, file);
+            size_t read = fread(buffer, sizeof(buffer) / BUFFER_SIZE, BUFFER_SIZE, file);
 
             if (string == NULL) {
                 string  = xmalloc(read);
@@ -65,5 +65,7 @@ int main(int argc, char **argv) {
         lexer_free(l);
 
         free(string);
+    } else {
+        printf("Invalid usage of this command. Please provide a file to use.");
     }
 }
