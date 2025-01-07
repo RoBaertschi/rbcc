@@ -3,7 +3,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "ast.h"
 #include "lexer.h"
+#include "parser.h"
 #include "rbcc.h"
 
 #define BUFFER_SIZE 1024
@@ -20,7 +22,8 @@ int main(int argc, char **argv) {
         size_t str_len = 0;
         while (true) {
             char   buffer[BUFFER_SIZE];
-            size_t read = fread(buffer, sizeof(buffer) / BUFFER_SIZE, BUFFER_SIZE, file);
+            size_t read =
+                fread(buffer, sizeof(buffer) / BUFFER_SIZE, BUFFER_SIZE, file);
 
             if (string == NULL) {
                 string  = xmalloc(read);
@@ -47,21 +50,16 @@ int main(int argc, char **argv) {
                   .len  = str_len,
         };
 
-        lexer *l   = lexer_new(input);
+        lexer  *l = lexer_new(input);
 
-        token  tok = lexer_scan_token(l);
-        while (tok.kind != TEOF && tok.kind != TINVALID) {
-            for (size_t i = 0; i < tok.literal.len; i++) {
-                putc(tok.literal.data[i], stdout);
-            }
-            printf(": %s\n", token_kind_str(tok.kind));
-            tok = lexer_scan_token(l);
-        }
-        for (size_t i = 0; i < tok.literal.len; i++) {
-            putc(tok.literal.data[i], stdout);
-        }
+        parser *p = parser_new(l);
+
+        program *program = parse_program(p);
+        program_print(program);
         printf("\n");
+        program_free(program);
 
+        parser_free(p);
         lexer_free(l);
 
         free(string);

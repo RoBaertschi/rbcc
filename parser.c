@@ -1,10 +1,14 @@
 #include "parser.h"
-#include <math.h>
 #include "ast.h"
 #include "lexer.h"
 #include "rbcc.h"
+#include "uthash.h"
 
-void default_error_callback(token tok, char const *fmt, va_list arg) {
+typedef enum precedence {
+    PLOWEST,
+} precedence;
+
+static void default_error_callback(token tok, char const *fmt, va_list arg) {
     loc     loc = tok.loc;
     va_list arg2;
     va_copy(arg2, arg);
@@ -12,14 +16,14 @@ void default_error_callback(token tok, char const *fmt, va_list arg) {
     int   buffer_size = vsnprintf(NULL, 0, fmt, arg) + 1;
     char *buffer      = xmalloc(buffer_size);
     vsnprintf(buffer, buffer_size, fmt, arg2);
-    fprintf(stdout, "%s[%d:%d] Parser Error %s", loc.file.data, loc.line,
+    fprintf(stdout, "%s[%d:%d] Parser Error %s\n", loc.file.data, loc.line,
             loc.column, buffer);
     free(buffer);
 
     va_end(arg2);
 }
 
-void default_warning_callback(token tok, char const *fmt, va_list arg) {
+static void default_warning_callback(token tok, char const *fmt, va_list arg) {
     loc     loc = tok.loc;
     va_list arg2;
     va_copy(arg2, arg);
@@ -27,14 +31,14 @@ void default_warning_callback(token tok, char const *fmt, va_list arg) {
     int   buffer_size = vsnprintf(NULL, 0, fmt, arg) + 1;
     char *buffer      = xmalloc(buffer_size);
     vsnprintf(buffer, buffer_size, fmt, arg2);
-    fprintf(stdout, "%s[%d:%d] Parser Warning %s", loc.file.data, loc.line,
+    fprintf(stdout, "%s[%d:%d] Parser Warning %s\n", loc.file.data, loc.line,
             loc.column, buffer);
     free(buffer);
 
     va_end(arg2);
 }
 
-void PRINTF_FORMAT(3, 4)
+static void PRINTF_FORMAT(3, 4)
     error(parser *NONNULL p, token token, char const *fmt, ...) {
     va_list arg;
     va_start(arg, fmt);
@@ -46,7 +50,7 @@ void PRINTF_FORMAT(3, 4)
     va_end(arg);
 }
 
-void PRINTF_FORMAT(3, 4)
+static void PRINTF_FORMAT(3, 4)
     warning(parser *NONNULL p, token token, char const *fmt, ...) {
     va_list arg;
     va_start(arg, fmt);
@@ -88,7 +92,7 @@ static bool tok_peek_is(parser *NONNULL p, token_kind kind) {
     if (!tok_peek_is(p, kind)) {                   \
         error(p, p->peek_token, msg, __VA_ARGS__); \
         return NULL;                               \
-    }                                                                  \
+    }                                              \
     next_token(p);
 
 #define expect_peek(k)                                                 \
@@ -99,9 +103,55 @@ static bool tok_peek_is(parser *NONNULL p, token_kind kind) {
     }                                                                  \
     next_token(p);
 
-static expr *NULLABLE parse_expr(parser *p) { return NULL; }
+precedence get_precedence(token_kind kind) {
+    switch (kind) {
+        default:
+            return PLOWEST;
+    }
+}
 
-static stmt *NULLABLE parse_function(parser *p) {
+precedence peek_precedence(parser *NONNULL p) {
+    return get_precedence(p->peek_token.kind);
+}
+
+precedence cur_precedence(parser *NONNULL p) {
+    return get_precedence(p->cur_token.kind);
+}
+
+static expr *NULLABLE parse_constant(parser *p) {
+    expect(TCONSTANT);
+
+    return EXPR_NEW(expr_constant, p->cur_token, p->cur_token.data.constant);
+}
+
+static expr *NULLABLE parse_expr(parser *NONNULL p, precedence prec) {
+    struct prefix_parse_fn_entry *entry;
+    HASH_FIND(hh, p->prefix_parse_fns, &p->cur_token.kind, sizeof(token_kind),
+              entry);
+    if (entry == NULL) {
+        error(p, p->cur_token, "could not find a prefix function for %s",
+              token_kind_str(p->cur_token.kind));
+        return NULL;
+    }
+    expr *left_expr = entry->fn(p);
+
+    while (!tok_peek_is(p, TSEMICOLON) && prec < peek_precedence(p)) {
+        struct infix_parse_fn_entry *infix;
+        HASH_FIND(hh, p->infix_parse_fns, &p->peek_token.kind,
+                  sizeof(token_kind), infix);
+        if (infix == NULL) {
+            return left_expr;
+        }
+
+        next_token(p);
+
+        left_expr = infix->fn(p, left_expr);
+    }
+
+    return left_expr;
+}
+
+static stmt *NULLABLE parse_function(parser *NONNULL p) {
     expect(TFN);
     expect_peek(TIDENT);
     str_slice lit        = p->cur_token.literal;
@@ -109,15 +159,38 @@ static stmt *NULLABLE parse_function(parser *p) {
     expect_peek(TOPEN_PAREN);
     expect_peek(TCLOSE_PAREN);
     expect_peek(TEQUAL);
-    expr *e = parse_expr(p);
+    next_token(p);
+    expr *e = parse_expr(p, PLOWEST);
     expect_peek(TSEMICOLON);
     return STMT_NEW(stmt_function, identifier, e);
 }
 
 program *NONNULL parse_program(parser *p) {
-    program *prog       = xmalloc(sizeof(program));
-    prog->main_function = parse_function(p);
-    return prog;
+    return program_new((program){
+        .main_function = parse_function(p),
+    });
+}
+
+void register_prefix_fn(parser *NONNULL parser, prefixParseFn fn,
+                        token_kind kind) {
+    struct prefix_parse_fn_entry *entry =
+        xmalloc(sizeof(struct prefix_parse_fn_entry));
+    *entry = (struct prefix_parse_fn_entry){
+        .fn  = fn,
+        .key = kind,
+    };
+    HASH_ADD(hh, parser->prefix_parse_fns, key, sizeof(token_kind), entry);
+}
+
+void register_infix_fn(parser *NONNULL parser, infixParseFn fn,
+                       token_kind kind) {
+    struct infix_parse_fn_entry *entry =
+        xmalloc(sizeof(struct infix_parse_fn_entry));
+    *entry = (struct infix_parse_fn_entry){
+        .fn  = fn,
+        .key = kind,
+    };
+    HASH_ADD(hh, parser->infix_parse_fns, key, sizeof(token_kind), entry);
 }
 
 parser *NONNULL parser_new(lexer *l) {
@@ -125,20 +198,26 @@ parser *NONNULL parser_new(lexer *l) {
 }
 
 // Sepcify additional callbacks
-parser *NONNULL parser_new_ex(lexer *l, parser_error_callback ec,
-                              parser_warning_callback wc) {
+parser *NONNULL parser_new_ex(lexer *l, parser_error_callback NULLABLE ec,
+                              parser_warning_callback NULLABLE wc) {
     parser *p = xmalloc(sizeof(parser));
     *p        = (parser){
-               .lexer    = l,
-               .ec       = ec,
-               .wc       = wc,
-               .warnings = 0,
-               .errors   = 0,
+               .lexer            = l,
+
+               .infix_parse_fns  = NULL,
+               .prefix_parse_fns = NULL,
+
+               .ec               = ec,
+               .wc               = wc,
+               .warnings         = 0,
+               .errors           = 0,
     };
+
+    register_prefix_fn(p, parse_constant, TCONSTANT);
 
     next_token(p);
     next_token(p);
 
     return p;
 }
-void parser_free(parser *p) { free(p); }
+void parser_free(parser *NONNULL p) { free(p); }

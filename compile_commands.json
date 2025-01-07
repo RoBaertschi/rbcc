@@ -43,8 +43,14 @@
   },
   {
     "directory": "/home/robin/dev/c/rbcc",
-    "command": "ninja -t compdb > compile_commands.json",
+    "command": "",
     "file": "main.c",
+    "output": "all"
+  },
+  {
+    "directory": "/home/robin/dev/c/rbcc",
+    "command": "ninja -t compdb > compile_commands.json",
+    "file": "all",
     "output": "compile_commands.json"
   }
 ]

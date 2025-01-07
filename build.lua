@@ -1,6 +1,16 @@
 #!/usr/bin/env lua
 -- A simple build script that generates ninja build files
 
+--> Build Configuration --
+local files = { "main.c", "lexer.c", "utf8proc.c", "str.c", "ast.c", "parser.c" }
+local target = "build/rbc"
+local compiler = "clang"
+local cflags = "-g -std=c11 -O2 -Wall -Wextra -Wpedantic"
+local ldflags = ""
+--< Build Configuration --
+
+-- Build Logic
+
 local is_windows = package.config:sub(1, 1) == "\\"
 
 local ninja = io.open("build.ninja", "w+")
@@ -38,20 +48,13 @@ local function build(output, inputs, r)
 	ninja:write("\n")
 end
 
---> Build Configuration --
-local files = { "main.c", "lexer.c", "utf8proc.c", "str.c", "ast.c", "parser.c" }
-local target = "build/rbc"
-local compiler = "clang"
-local cflags = "-g -std=c11 -O2 -Wall -Wextra -Wpedantic"
-
 if compiler == "clang" then
 	cflags = cflags .. " -Wno-nullability-extension" -- we can ignore the warning about the nullability extension because we only add it for clang.
 end
 
 var("ninja_required_version", "1.2")
 var("cflags", cflags) -- Flags passed to gcc
-var("ldflags", "") -- Flags passed to gcc when linking
---< Build Configuration --
+var("ldflags", ldflags) -- Flags passed to gcc when linking
 
 ---@type { input: string, output: string }[]
 local files_to_build = {}
@@ -95,8 +98,9 @@ end
 
 local all = copy_table(files)
 table.insert(all, target)
+build("all", all, "phony")
 
-build("compile_commands.json", all, compdb)
+build("compile_commands.json", { "all" }, compdb)
 
 ninja:close()
 

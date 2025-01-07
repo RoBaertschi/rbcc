@@ -58,8 +58,8 @@ inline void *NONNULL xmalloc(size_t size) {
 // Also, strings can or cannot own memory, that depends on how they are created,
 // to be sure, clone the string. len excludes the '\0'
 typedef struct str {
-    u8    *data;
-    size_t len;
+    u8 *NULLABLE data;
+    size_t       len;
 } str;
 
 // String slice
@@ -67,8 +67,8 @@ typedef struct str {
 // It references to a other string. Be carefull to not use a slice while
 // the string is already freed.
 typedef struct str_slice {
-    u8    *data;
-    size_t len;
+    u8 *NULLABLE data;
+    size_t       len;
 } str_slice;
 
 #define S(s) (str){.data = s, .len = sizeof(s) - 1}

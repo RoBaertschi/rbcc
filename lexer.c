@@ -9,13 +9,16 @@
 #include "utf8proc.h"
 #include "uthash.h"
 
-char const * const token_kind_strs[] = {
-    #define _X(name) [T##name] = #name,
+char const *const token_kind_strs[] = {
+#define _X(name) [T##name] = #name,
     TOKENS
-    #undef _X
+#undef _X
 };
 
-static_assert((sizeof(token_kind_strs) / sizeof(char const*const)) == TMAX_TOKEN, "The token_kind_strs array has to have the same amount of entries as there are tokens.");
+static_assert((sizeof(token_kind_strs) / sizeof(char const *const)) ==
+                  TMAX_TOKEN,
+              "The token_kind_strs array has to have the same amount of "
+              "entries as there are tokens.");
 
 char const *token_kind_str(token_kind kind) {
     if (kind >= TMAX_TOKEN || kind < 0) {
@@ -62,7 +65,7 @@ static void uninit_keywords(void) {
     }
 }
 
-void default_error_callback(loc loc, char const *fmt, va_list arg) {
+static void default_error_callback(loc loc, char const *fmt, va_list arg) {
     va_list arg2;
     va_copy(arg2, arg);
 
@@ -131,8 +134,7 @@ loc pos_to_loc(lexer *l, u32 pos) {
                  .pos    = pos};
 }
 
-void PRINTF_FORMAT(2, 3) error(lexer      *l,
-                                                         char const *fmt, ...) {
+void PRINTF_FORMAT(2, 3) error(lexer *l, char const *fmt, ...) {
     va_list arg;
     va_start(arg, fmt);
 
@@ -228,6 +230,58 @@ static str_slice scan_string(lexer *l) {
     return (str_slice){.data = l->input.data + old_pos,
                        .len  = l->pos - old_pos};
 }
+typedef struct scan_constant_result {
+    i64       value;
+    str_slice literal;
+} scan_constant_result;
+static scan_constant_result scan_constant(lexer *l) {
+    u32  old_pos = l->pos;
+    bool minus   = false;
+    if (l->ch == '-') {
+        minus = true;
+        read_ch(l);
+    }
+    i64    value = 0;
+    size_t i     = 1;
+
+    // 324
+    // ^
+    // value = 3, i = 10
+    // 324
+    //  ^
+    // value = 23, i = 100
+    // 324
+    //   ^
+    // value = 423, i = 1000
+    //
+    //
+    // 423
+    //
+    // 423 % 100 = 23
+    // (423 - 23) / 100 = 4
+
+    while (is_number(l->ch)) {
+        value += number_value(l->ch) * i;
+        i *= 10;
+        read_ch(l);
+    }
+
+    i64    reverse    = 0;
+    size_t multiplier = 1;
+    while (i % 10 == 0) {
+        i /= 10; // 100, 10, 1
+        i64 mod = value % i;
+        reverse += ((value - mod) / i) * multiplier;
+        multiplier *= 10;
+    }
+
+    value = minus ? -reverse : reverse;
+    return (scan_constant_result){
+        .value   = value,
+        .literal = (str_slice){.data = l->input.data + old_pos,
+                               .len  = l->pos - old_pos}
+    };
+}
 
 static void skip_whitespace(lexer *l) {
     while (l->ch == '\n' || l->ch == '\t' || l->ch == ' ') {
@@ -241,7 +295,7 @@ token lexer_scan_token(lexer *l) {
     token_kind kind    = TINVALID;
     loc        loc     = pos_to_loc(l, l->pos);
     str_slice  literal = {.data = l->input.data + l->pos, .len = 1};
-    token_data data = {0};
+    token_data data    = {0};
 
     if (is_letter(l->ch)) {
         kind    = TIDENT;
@@ -254,6 +308,11 @@ token lexer_scan_token(lexer *l) {
     } else if (l->ch == '"') {
         kind    = TSTRING;
         literal = scan_string(l);
+    } else if (is_number(l->ch)) {
+        scan_constant_result result = scan_constant(l);
+        literal                     = result.literal;
+        data                        = (token_data){.constant = result.value};
+        kind                        = TCONSTANT;
     } else {
         switch (l->ch) {
             case -1:
