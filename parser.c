@@ -173,7 +173,7 @@ program *NONNULL parse_program(parser *p) {
     });
 }
 
-void register_prefix_fn(parser *NONNULL parser, prefixParseFn fn,
+void register_prefix_fn(parser *NONNULL parser, prefix_parse_fn fn,
                         token_kind kind) {
     struct prefix_parse_fn_entry *entry =
         xmalloc(sizeof(struct prefix_parse_fn_entry));
@@ -184,7 +184,7 @@ void register_prefix_fn(parser *NONNULL parser, prefixParseFn fn,
     HASH_ADD(hh, parser->prefix_parse_fns, key, sizeof(token_kind), entry);
 }
 
-void register_infix_fn(parser *NONNULL parser, infixParseFn fn,
+void register_infix_fn(parser *NONNULL parser, infix_parse_fn fn,
                        token_kind kind) {
     struct infix_parse_fn_entry *entry =
         xmalloc(sizeof(struct infix_parse_fn_entry));
@@ -222,6 +222,7 @@ parser *NONNULL parser_new_ex(lexer *l, parser_error_callback NULLABLE ec,
 
     return p;
 }
+
 void parser_free(parser *NONNULL p) {
 
     {
