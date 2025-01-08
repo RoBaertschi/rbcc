@@ -1,3 +1,4 @@
 build/
 build.ninja
 .cache/
+compile_commands.json
