@@ -143,6 +143,7 @@ void PRINTF_FORMAT(2, 3) error(lexer *l, char const *fmt, ...) {
         l->ec(loc, fmt, arg);
     }
     l->errors += 1;
+    str_free(loc.file);
 
     va_end(arg);
 }
@@ -372,3 +373,17 @@ void lexer_free(lexer *l) {
     free(l);
     uninit_keywords();
 }
+
+token lexer_token_clone(token tok) {
+    return (token){
+        .data    = tok.data,
+        .loc     = {.file   = str_clone(tok.loc.file),
+                    .column = tok.loc.column,
+                    .line   = tok.loc.line,
+                    .pos    = tok.loc.pos},
+        .kind    = tok.kind,
+        .literal = tok.literal,
+    };
+}
+
+void lexer_token_free(token tok) { str_free(tok.loc.file); }

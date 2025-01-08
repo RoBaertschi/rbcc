@@ -71,6 +71,8 @@ typedef struct lexer {
 } lexer;
 
 token  lexer_scan_token(lexer *l);
+void   lexer_token_free(token tok);
+token  lexer_token_clone(token tok);
 
 lexer *lexer_new(str input);
 lexer *lexer_new_ex(str input, lexer_error_callback ec);

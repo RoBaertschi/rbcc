@@ -4,6 +4,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include "ast.h"
+#include "emit_ir.h"
+#include "ir.h"
 #include "lexer.h"
 #include "parser.h"
 #include "rbcc.h"
@@ -57,6 +59,13 @@ int main(int argc, char **argv) {
         program *program = parse_program(p);
         program_print(program);
         printf("\n");
+
+        ir_program ir_program = ir_emit_program(program);
+
+        ir_program_print(&ir_program);
+
+        ir_program_free(&ir_program);
+
         program_free(program);
 
         parser_free(p);

@@ -1,4 +1,5 @@
 #include "parser.h"
+#include <stdlib.h>
 #include "ast.h"
 #include "lexer.h"
 #include "rbcc.h"
@@ -63,6 +64,7 @@ static void PRINTF_FORMAT(3, 4)
 }
 
 static void next_token(parser *p) {
+    lexer_token_free(p->cur_token);
     p->cur_token  = p->peek_token;
     p->peek_token = lexer_scan_token(p->lexer);
 }
@@ -220,4 +222,23 @@ parser *NONNULL parser_new_ex(lexer *l, parser_error_callback NULLABLE ec,
 
     return p;
 }
-void parser_free(parser *NONNULL p) { free(p); }
+void parser_free(parser *NONNULL p) {
+
+    {
+        struct prefix_parse_fn_entry *el, *tmp;
+        HASH_ITER(hh, p->prefix_parse_fns, el, tmp) {
+            HASH_DEL(p->prefix_parse_fns, el);
+            free(el);
+        }
+    }
+    {
+        struct infix_parse_fn_entry *el, *tmp;
+        HASH_ITER(hh, p->infix_parse_fns, el, tmp) {
+            HASH_DEL(p->prefix_parse_fns, el);
+            free(el);
+        }
+    }
+    lexer_token_free(p->cur_token);
+    lexer_token_free(p->peek_token);
+    free(p);
+}

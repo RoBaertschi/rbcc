@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "lexer.h"
 #include "rbcc.h"
 
 void program_print(program *NONNULL prog) {
@@ -58,6 +59,8 @@ void stmt_free(stmt *ptr) {
         case stmt_function: {
             struct stmt_function data = s.data.stmt_function;
             expr_free(data.body);
+            str_free(data.name);
+            free(ptr);
             return;
         }
     }
@@ -105,7 +108,7 @@ expr_list expr_list_new(expr_list_buffer const buffer) {
     assert(0 < buffer.len);
     expr_list list = {0};
     list.data      = xmalloc(sizeof(expr) * buffer.len);
-    memcpy(list.data, buffer.data, buffer.len);
+    memcpy(list.data, buffer.data, sizeof(expr) * buffer.len);
     list.len = buffer.len;
     return list;
 }
@@ -152,19 +155,24 @@ void expr_free(expr *NULLABLE ptr) {
     }
 
     expr e = *ptr;
+
+    lexer_token_free(e.root_token);
     switch (e.tag) {
         case expr_string: {
             struct expr_string data = e.data.expr_string;
             str_free(data.content);
+            free(ptr);
             return;
         }
         case expr_function_call: {
             struct expr_function_call data = e.data.expr_function_call;
             expr_list_free(data.params);
+            free(ptr);
             return;
         }
         case expr_constant: {
             /*struct expr_constant data = e.data.expr_constant;*/
+            free(ptr);
             return;
         }
     }
