@@ -1,0 +1,6 @@
+fn main() = 0;
+--- ast ---
+program(stmt_function(name = main, body = expr_constant(0)))
+--- ir ---
+function main:
+  RET 0

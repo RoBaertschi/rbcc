@@ -2,6 +2,7 @@
 
 #include <assert.h>
 #include <errno.h>
+#include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -73,8 +74,9 @@ typedef struct str_slice {
 } str_slice;
 
 #define S(s) \
-    (str) { .data = s, .len = sizeof(s) - 1 }
+    (str) { .data = (u8*)s, .len = sizeof(s) - 1 }
 
+bool str_eq(str str1, str str2);
 str  str_slice_clone(str_slice slice);
 str  str_clone(str s);
 void str_free(str s);

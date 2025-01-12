@@ -12,67 +12,140 @@
 
 #define BUFFER_SIZE 1024
 
+typedef enum arg_kind {
+    ARG_PRINT_AST,
+    ARG_PRINT_IR,
+    ARG_PRINT_ALL,
+} arg_kind;
+
+typedef struct arg {
+    arg_kind type;
+    str      string;
+} arg;
+
+str get_program_name(char *argv) {
+    if (*argv != 0) {
+        size_t len = strlen(argv);
+        return (str){.data = (u8 *)argv, .len = len};
+    } else {
+        return S("rbc");
+    }
+}
+
+void print_help(int exit_code, str program_name) {
+    printf("%s [--print] FILE\n", program_name.data);
+    printf("  --help       # Print this help\n");
+    printf("  --print=all  # Print the ast and ir to stdout\n");
+    printf("  --print=ast  # Print the ast to stdout\n");
+    printf("  --print=ir   # Print the ir to stdout\n");
+    exit(exit_code);
+}
+
 int main(int argc, char **argv) {
-    if (argc > 1) {
-        FILE *file = fopen(argv[1], "r");
-        if (file == NULL) {
-            fprintf(stderr, "Could not open file %s\n", argv[1]);
-            return 1;
-        }
+    arg_kind print_mode   = ARG_PRINT_ALL;
 
-        u8    *string  = NULL;
-        size_t str_len = 0;
-        while (true) {
-            char   buffer[BUFFER_SIZE];
-            size_t read =
-                fread(buffer, sizeof(buffer) / BUFFER_SIZE, BUFFER_SIZE, file);
-
-            if (string == NULL) {
-                string  = xmalloc(read);
-                str_len = read;
-                memcpy(string, buffer, read);
-            } else {
-                string = realloc(string, str_len + read);
-                CHECK_ALLOC(string);
-                memcpy(string + str_len, buffer, read), str_len += read;
-            }
-
-            if (read < BUFFER_SIZE) {
+    str      program_name = get_program_name(argv[0]);
+    char    *file_name    = NULL;
+    argv += 1; // skip the first argument
+    while (*argv != NULL) {
+        switch (**argv) {
+            case '-':
+                if (str_eq((str){.data = (u8 *)*argv, .len = strlen(*argv)},
+                           S("--print=ast"))) {
+                    print_mode = ARG_PRINT_AST;
+                } else if (str_eq(
+                               (str){.data = (u8 *)*argv, .len = strlen(*argv)},
+                               S("--print=ir"))) {
+                    print_mode = ARG_PRINT_IR;
+                } else if (str_eq(
+                               (str){.data = (u8 *)*argv, .len = strlen(*argv)},
+                               S("--print=all"))) {
+                    print_mode = ARG_PRINT_ALL;
+                } else if (str_eq(
+                               (str){.data = (u8 *)*argv, .len = strlen(*argv)},
+                               S("--help"))) {
+                    print_help(0, program_name);
+                } else {
+                    printf("unknown option \"%s\"\n", *argv);
+                    print_help(1, program_name);
+                }
                 break;
-            }
+            default:
+                if (file_name == NULL) {
+                    file_name = *argv;
+                } else {
+                    printf("unknown argument \"%s\"\n", *argv);
+                    print_help(1, program_name);
+                }
         }
-        fclose(file);
+        argv += 1;
+    }
 
-        string = realloc(string, str_len + 1);
-        CHECK_ALLOC(string);
-        string[str_len] = 0;
+    if (file_name == NULL) {
+        printf("no input file specified \"%s\"\n", *argv);
+        print_help(1, program_name);
+    }
 
-        str input       = {
-                  .data = string,
-                  .len  = str_len,
-        };
+    FILE *file = fopen(file_name, "r");
+    if (file == NULL) {
+        fprintf(stderr, "Could not open file %s\n", argv[1]);
+        return 1;
+    }
 
-        lexer   *l       = lexer_new(input);
+    u8    *string  = NULL;
+    size_t str_len = 0;
+    while (true) {
+        char   buffer[BUFFER_SIZE];
+        size_t read =
+            fread(buffer, sizeof(buffer) / BUFFER_SIZE, BUFFER_SIZE, file);
 
-        parser  *p       = parser_new(l);
+        if (string == NULL) {
+            string  = xmalloc(read);
+            str_len = read;
+            memcpy(string, buffer, read);
+        } else {
+            string = realloc(string, str_len + read);
+            CHECK_ALLOC(string);
+            memcpy(string + str_len, buffer, read), str_len += read;
+        }
 
-        program *program = parse_program(p);
+        if (read < BUFFER_SIZE) {
+            break;
+        }
+    }
+    fclose(file);
+
+    string = realloc(string, str_len + 1);
+    CHECK_ALLOC(string);
+    string[str_len] = 0;
+
+    str input       = {
+              .data = string,
+              .len  = str_len,
+    };
+
+    lexer   *l       = lexer_new(input);
+
+    parser  *p       = parser_new(l);
+
+    program *program = parse_program(p);
+    if (print_mode != ARG_PRINT_IR) {
         program_print(program);
         printf("\n");
-
-        ir_program ir_program = ir_emit_program(program);
-
-        ir_program_print(&ir_program);
-
-        ir_program_free(&ir_program);
-
-        program_free(program);
-
-        parser_free(p);
-        lexer_free(l);
-
-        free(string);
-    } else {
-        printf("Invalid usage of this command. Please provide a file to use.");
     }
+
+    ir_program ir_program = ir_emit_program(program);
+
+    if (print_mode != ARG_PRINT_AST) {
+        ir_program_print(&ir_program);
+    }
+
+    ir_program_free(&ir_program);
+
+    program_free(program);
+
+    parser_free(p);
+    lexer_free(l);
+
+    free(string);
 }
