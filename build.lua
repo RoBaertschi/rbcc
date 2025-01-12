@@ -2,10 +2,21 @@
 -- A simple build script that generates ninja build files
 
 --> Build Configuration --
-local files = { "main.c", "lexer.c", "utf8proc.c", "str.c", "ast.c", "parser.c", "ir.c", "emit_ir.c" }
+local files = {
+	"main.c",
+	"lexer.c",
+	"utf8proc.c",
+	"str.c",
+	"ast.c",
+	"parser.c",
+	"ir.c",
+	"emit_ir.c",
+	"targets/x86_64-linux.c",
+	"targets/targets.c",
+}
 local target = "build/rbc"
 local compiler = "clang"
-local cflags = "-g -std=c11 -O2 -Wall -Wextra -Wpedantic"
+local cflags = "-g -std=c11 -O2 -Wall -Wextra -Wpedantic -I."
 local ldflags = ""
 --< Build Configuration --
 
