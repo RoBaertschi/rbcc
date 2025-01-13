@@ -160,7 +160,7 @@ class Test:
                     stdout = str(compile.stdout.decode('utf8'))
                     stderr = str(compile.stderr.decode('utf8'))
                     logger.error(
-                        "./build/rbc failed to compile test\nstdout: {}\nstderr: {}\n",
+                        "./build/rbc failed to compile test\nstdout: %s\nstderr: %s\n",
                         stdout,
                         stderr
                     )
@@ -169,7 +169,7 @@ class Test:
                 test = subprocess.run([str(temp_exe)])
                 if test.returncode != return_code:
                     logger.error(
-                        "{} test failed, expected return code {}, got {}",
+                        "{} test failed, expected return code %s, got %s",
                         return_code, test.returncode)
                     return False
 
