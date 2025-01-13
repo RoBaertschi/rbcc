@@ -4,6 +4,7 @@ import tempfile
 
 import sys
 import logging
+import json
 
 
 class ColoredFormatter(logging.Formatter):
@@ -79,9 +80,11 @@ class Test:
         logger = getLogger(self.test_name)
 
         ast_find_str = "--- ast ---\n"
-        ast_start = self.input.find(ast_find_str) + len(ast_find_str)
+        ast_start = self.input.find(ast_find_str)
         ir_find_str = "--- ir ---\n"
-        ir_start = self.input.find(ir_find_str) + len(ir_find_str)
+        ir_start = self.input.find(ir_find_str)
+        run_find_str = "--- run ---\n"
+        run_start = self.input.find(run_find_str)
 
         if ast_start == -1:
             logger.error(
@@ -97,9 +100,10 @@ class Test:
                 self.file)
             return False
 
-        code = self.input[:ast_start-len(ast_find_str)]
-        ast = self.input[ast_start:ir_start-len(ir_find_str)]
-        ir = self.input[ir_start:]
+        code = self.input[:ast_start]
+        ast = self.input[len(ast_find_str)+ast_start:ir_start]
+        ir = self.input[len(
+            ir_find_str)+ir_start:run_start if run_start != -1 else len(self.input)]
 
         code = code.strip()
         ast = ast.strip()
@@ -115,12 +119,14 @@ class Test:
 
             logger.info("Running ast test section")
             print_ast_result = subprocess.run(
-                ["./build/rbc", str(temp_code_file), "--print=ast"],
+                ["./build/rbc", str(temp_code_file),
+                 "--print=ast", "--no-emit"],
                 capture_output=True)
             if print_ast_result.returncode != 0:
                 logger.error(
                     "./build/rbc failed with %d, stdout: %s, stderr: %s",
                     print_ast_result.stdout, print_ast_result.stderr)
+                return False
             stdout = str(print_ast_result.stdout.decode('utf8')).strip()
             if stdout != ast:
                 logger.error("Expected \"%s\" to be \"%s\"", stdout, ast)
@@ -128,15 +134,35 @@ class Test:
 
             logger.info("Running ir test section")
             print_ir_result = subprocess.run(
-                ["./build/rbc", str(temp_code_file), "--print=ir"],
+                ["./build/rbc", str(temp_code_file),
+                 "--print=ir", "--no-emit"],
                 capture_output=True)
             if print_ir_result.returncode != 0:
                 logger.error(
                     "./build/rbc failed with %d, stdout: %s, stderr: %s",
                     print_ir_result.stdout, print_ir_result.stderr)
+                return False
             stdout = str(print_ir_result.stdout.decode('utf8')).strip()
             if stdout != ir:
                 logger.error("Expected:\n%s\n to be:\n%s", stdout, ir)
+                return False
+
+        if run_start != -1:
+            run = self.input[len(run_find_str)+run_start:]
+            loaded_json = json.loads(run)
+            return_code = loaded_json["return_code"]
+            temp_exe = temp_code_file.with_suffix("")
+            compile = subprocess.run(
+                ["./build/rbc", str(temp_code_file), "-o", str(temp_exe)])
+            if compile.returncode != 0:
+                logger.error("./build/rbc failed to compile test", )
+                return False
+
+            test = subprocess.run([str(temp_exe)])
+            if test.returncode != return_code:
+                logger.error(
+                    "{} test failed, expected return code {}, got {}",
+                    return_code, test.returncode)
                 return False
 
         logger.info("Success")

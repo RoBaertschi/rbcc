@@ -39,6 +39,7 @@ void print_help(int exit_code, str program_name) {
     printf("  --print=all  # Print the ast and ir to stdout\n");
     printf("  --print=ast  # Print the ast to stdout\n");
     printf("  --print=ir   # Print the ir to stdout\n");
+    printf("  --no-emit    # Do not emit any assembly or executables\n");
     exit(exit_code);
 }
 
@@ -47,8 +48,9 @@ int main(int argc, char **argv) {
     arg_kind print_mode      = ARG_PRINT_ALL;
 
     str      program_name    = get_program_name(argv[0]);
-    bool     found_file_name = false;
-    str      file_name;
+    bool     found_input_file, found_output_file = false;
+    str      input_file, output_file;
+    bool     emit = true;
     argv += 1; // skip the first argument
     while (*argv != NULL) {
         switch (**argv) {
@@ -66,6 +68,10 @@ int main(int argc, char **argv) {
                     print_mode = ARG_PRINT_ALL;
                 } else if (str_eq(
                                (str){.data = (u8 *)*argv, .len = strlen(*argv)},
+                               S("--no-emit"))) {
+                    emit = false;
+                } else if (str_eq(
+                               (str){.data = (u8 *)*argv, .len = strlen(*argv)},
                                S("--help"))) {
                     print_help(0, program_name);
                 } else {
@@ -74,10 +80,10 @@ int main(int argc, char **argv) {
                 }
                 break;
             default:
-                if (!found_file_name) {
-                    file_name =
+                if (!found_input_file) {
+                    input_file =
                         (str){.data = (u8 *)*argv, .len = strlen(*argv)};
-                    found_file_name = true;
+                    found_input_file = true;
                 } else {
                     printf("unknown argument \"%s\"\n", *argv);
                     print_help(1, program_name);
@@ -86,12 +92,12 @@ int main(int argc, char **argv) {
         argv += 1;
     }
 
-    if (!found_file_name) {
+    if (!found_input_file) {
         printf("no input file specified \"%s\"\n", *argv);
         print_help(1, program_name);
     }
 
-    FILE *file = fopen((char *)file_name.data, "r");
+    FILE *file = fopen((char *)input_file.data, "r");
     if (file == NULL) {
         fprintf(stderr, "Could not open file %s\n", argv[1]);
         return 1;
@@ -145,9 +151,12 @@ int main(int argc, char **argv) {
         ir_program_print(&ir_program);
     }
 
-    str with_suffix = file_name_with_suffix(file_name, S("fasm"));
-    code_gen((char const *)with_suffix.data, TARGET_X86_64_LINUX, ir_program);
-    str_free(with_suffix);
+    if (emit) {
+        str with_suffix = file_name_with_suffix(input_file, S("fasm"));
+        code_gen((char const *)with_suffix.data, TARGET_X86_64_LINUX,
+                 ir_program);
+        str_free(with_suffix);
+    }
 
     ir_program_free(&ir_program);
 
