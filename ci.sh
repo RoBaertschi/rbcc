@@ -10,4 +10,7 @@ if [[ $1 = "setup" ]]; then
 elif [[ $1 = "build" ]]; then
     export PATH="$(pwd):$PATH"
     ./build.lua
+elif [[ $1 = "test" ]]; then
+    export PATH="$(pwd):$PATH"
+    python3 tests.py
 fi
