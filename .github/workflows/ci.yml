@@ -19,6 +19,8 @@ jobs:
         path: |
           ./build/* 
           ./ninja
+          ./fasm
+          ./fasm-1.73.32
     - name: install lua and gcc
       run: sudo apt install -y gcc lua5.4 python3 fasm
     - name: setup
