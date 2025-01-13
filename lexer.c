@@ -267,10 +267,10 @@ static scan_constant_result scan_constant(lexer *l) {
         read_ch(l);
     }
 
-    i64    reverse    = 0;
+    i64 reverse = 0;
     while (value > 0) {
         reverse = reverse * 10 + value % 10;
-        value = value / 10;
+        value   = value / 10;
     }
 
     value = minus ? -reverse : reverse;

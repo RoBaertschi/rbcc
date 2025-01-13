@@ -88,4 +88,5 @@ expr *NONNULL expr_new(expr expr);
 void          expr_free(expr *NULLABLE expr);
 
 #define EXPR_NEW(tag, tok, ...) \
-    expr_new((expr){tag, lexer_token_clone(tok), {.tag = (struct tag){__VA_ARGS__}}})
+    expr_new((expr){            \
+        tag, lexer_token_clone(tok), {.tag = (struct tag){__VA_ARGS__}}})

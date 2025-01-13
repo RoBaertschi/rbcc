@@ -9,4 +9,4 @@ typedef enum target {
 
 target get_default_target(void);
 
-void code_gen(char const* NONNULL file_name, target target, ir_program program);
+void code_gen(char const *NONNULL file_name, target target, ir_program program);

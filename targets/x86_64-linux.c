@@ -30,15 +30,15 @@ void emitf(state *NONNULL s, char const *NONNULL msg, ...) {
     va_end(arg);
 }
 
-static void emit_function(state *s, ir_function *func);
-static void emit_program(state *s, ir_program prog);
-static void emit_instruction(state *s, ir_instruction inst);
-static char *get_value(ir_value* value);
+static void  emit_function(state *s, ir_function *func);
+static void  emit_program(state *s, ir_program prog);
+static void  emit_instruction(state *s, ir_instruction inst);
+static char *get_value(ir_value *value);
 
-void        x86_64_linux_emit_code(ir_program program, char const *file_name) {
+void         x86_64_linux_emit_code(ir_program program, char const *file_name) {
     errno   = 0;
     state s = {
-               .file = fopen(file_name, "w+"),
+                .file = fopen(file_name, "w+"),
     };
     if (s.file == NULL) {
         fail("Could not open file %s because: %s", file_name, strerror(errno));
@@ -52,7 +52,8 @@ static void emit_program(state *NONNULL s, ir_program prog) {
     emit_function(s, prog.main_function);
 
     // TODO: Clear up what we need to setup for libc and use our own main
-    // Read this for argv and argc: http://dbp-consulting.com/tutorials/debugging/linuxProgramStartup.html
+    // Read this for argv and argc:
+    // http://dbp-consulting.com/tutorials/debugging/linuxProgramStartup.html
     /*emitf(s, */
     /*      "public _start\n"*/
     /*      "_start:\n"*/

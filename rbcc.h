@@ -55,7 +55,7 @@ inline void *NONNULL xmalloc(size_t size) {
 }
 
 char *NONNULL PRINTF_FORMAT(1, 2) alloc_print(char const *NONNULL fmt, ...);
-struct str PRINTF_FORMAT(1, 2) alloc_print_str(char const *NONNULL fmt, ...);
+struct str    PRINTF_FORMAT(1, 2) alloc_print_str(char const *NONNULL fmt, ...);
 
 // Strings
 // Strings are assumed to be utf8, but are not enforced.
@@ -77,7 +77,7 @@ typedef struct str_slice {
 } str_slice;
 
 #define S(s) \
-    (str) { .data = (u8*)s, .len = sizeof(s) - 1 }
+    (str) { .data = (u8 *)s, .len = sizeof(s) - 1 }
 
 bool str_eq(str str1, str str2);
 str  str_slice_clone(str_slice slice);

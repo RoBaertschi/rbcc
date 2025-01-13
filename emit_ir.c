@@ -42,7 +42,8 @@ ir_function *NONNULL ir_emit_function(stmt *ptr) {
             ir_expr                expr = ir_emit_expr(data.body);
             ir_instructions_buffer b    = ir_instructions_buffer_new(1);
             ir_instructions_buffer_append(&b, expr.insts);
-            ir_instructions_buffer_push(&b, ir_instruction_new(INST_RET, expr.result, NULL));
+            ir_instructions_buffer_push(
+                &b, ir_instruction_new(INST_RET, expr.result, NULL));
 
             ir_instructions insts = ir_instructions_new(b);
 

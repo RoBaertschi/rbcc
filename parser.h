@@ -19,14 +19,14 @@ struct parser {
     token          cur_token, peek_token;
 
     struct prefix_parse_fn_entry {
-        token_kind            key;
+        token_kind              key;
         prefix_parse_fn NONNULL fn;
-        UT_hash_handle        hh;
+        UT_hash_handle          hh;
     } *NONNULL prefix_parse_fns;
     struct infix_parse_fn_entry {
-        token_kind           key;
+        token_kind             key;
         infix_parse_fn NONNULL fn;
-        UT_hash_handle       hh;
+        UT_hash_handle         hh;
     } *NONNULL                      infix_parse_fns;
 
     u32                             errors, warnings;

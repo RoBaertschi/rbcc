@@ -44,11 +44,11 @@ void print_help(int exit_code, str program_name) {
 
 int main(int argc, char **argv) {
     (void)argc;
-    arg_kind print_mode   = ARG_PRINT_ALL;
+    arg_kind print_mode      = ARG_PRINT_ALL;
 
-    str      program_name = get_program_name(argv[0]);
-    bool found_file_name = false;
-    str file_name;
+    str      program_name    = get_program_name(argv[0]);
+    bool     found_file_name = false;
+    str      file_name;
     argv += 1; // skip the first argument
     while (*argv != NULL) {
         switch (**argv) {
@@ -75,7 +75,8 @@ int main(int argc, char **argv) {
                 break;
             default:
                 if (!found_file_name) {
-                    file_name = (str){.data = (u8*)*argv, .len = strlen(*argv)};
+                    file_name =
+                        (str){.data = (u8 *)*argv, .len = strlen(*argv)};
                     found_file_name = true;
                 } else {
                     printf("unknown argument \"%s\"\n", *argv);
@@ -90,7 +91,7 @@ int main(int argc, char **argv) {
         print_help(1, program_name);
     }
 
-    FILE *file = fopen((char*)file_name.data, "r");
+    FILE *file = fopen((char *)file_name.data, "r");
     if (file == NULL) {
         fprintf(stderr, "Could not open file %s\n", argv[1]);
         return 1;
@@ -145,7 +146,7 @@ int main(int argc, char **argv) {
     }
 
     str with_suffix = file_name_with_suffix(file_name, S("fasm"));
-    code_gen((char const*)with_suffix.data, TARGET_X86_64_LINUX, ir_program);
+    code_gen((char const *)with_suffix.data, TARGET_X86_64_LINUX, ir_program);
     str_free(with_suffix);
 
     ir_program_free(&ir_program);
