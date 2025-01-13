@@ -184,3 +184,7 @@ for file in tests_dir.iterdir():
         test = Test(file.with_suffix("").name, file.read_text(), file)
         if not test.run_test():
             failed = True
+
+if failed:
+    import os
+    os.exit(1)
