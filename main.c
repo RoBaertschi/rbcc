@@ -173,7 +173,7 @@ int main(int argc, char **argv) {
         print_help(1, program_name);
     }
 
-    if (!found_output_file) {
+    if (!found_output_file && emit) {
         printf("no output file specified");
         print_help(1, program_name);
     }

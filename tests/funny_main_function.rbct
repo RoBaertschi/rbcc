@@ -1,0 +1,10 @@
+fn main() = 69;
+--- ast ---
+program(stmt_function(name = main, body = expr_constant(69)))
+--- ir ---
+function main:
+  RET 69
+--- run ---
+{
+    "return_code": 69
+}

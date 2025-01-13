@@ -147,23 +147,31 @@ class Test:
                 logger.error("Expected:\n%s\n to be:\n%s", stdout, ir)
                 return False
 
-        if run_start != -1:
-            run = self.input[len(run_find_str)+run_start:]
-            loaded_json = json.loads(run)
-            return_code = loaded_json["return_code"]
-            temp_exe = temp_code_file.with_suffix("")
-            compile = subprocess.run(
-                ["./build/rbc", str(temp_code_file), "-o", str(temp_exe)])
-            if compile.returncode != 0:
-                logger.error("./build/rbc failed to compile test", )
-                return False
+            if run_start != -1:
+                run = self.input[len(run_find_str)+run_start:]
+                loaded_json = json.loads(run)
+                return_code = loaded_json["return_code"]
+                temp_exe = temp_code_file.with_suffix("")
+                logger.info("Running run test section")
+                compile = subprocess.run(
+                    ["./build/rbc", str(temp_code_file), "-o", str(temp_exe)],
+                    capture_output=True)
+                if compile.returncode != 0:
+                    stdout = str(compile.stdout.decode('utf8'))
+                    stderr = str(compile.stderr.decode('utf8'))
+                    logger.error(
+                        "./build/rbc failed to compile test\nstdout: {}\nstderr: {}\n",
+                        stdout,
+                        stderr
+                    )
+                    return False
 
-            test = subprocess.run([str(temp_exe)])
-            if test.returncode != return_code:
-                logger.error(
-                    "{} test failed, expected return code {}, got {}",
-                    return_code, test.returncode)
-                return False
+                test = subprocess.run([str(temp_exe)])
+                if test.returncode != return_code:
+                    logger.error(
+                        "{} test failed, expected return code {}, got {}",
+                        return_code, test.returncode)
+                    return False
 
         logger.info("Success")
         return True
