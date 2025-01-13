@@ -2,4 +2,4 @@
 
 #include "ir.h"
 
-void emit_code(ir_program program, char const* file_name);
+void x86_64_linux_emit_code(ir_program program, char const* file_name);

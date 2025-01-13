@@ -268,12 +268,9 @@ static scan_constant_result scan_constant(lexer *l) {
     }
 
     i64    reverse    = 0;
-    size_t multiplier = 1;
-    while (i % 10 == 0) {
-        i /= 10; // 100, 10, 1
-        i64 mod = value % i;
-        reverse += ((value - mod) / i) * multiplier;
-        multiplier *= 10;
+    while (value > 0) {
+        reverse = reverse * 10 + value % 10;
+        value = value / 10;
     }
 
     value = minus ? -reverse : reverse;

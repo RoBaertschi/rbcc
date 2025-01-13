@@ -54,6 +54,9 @@ inline void *NONNULL xmalloc(size_t size) {
     return result;
 }
 
+char *NONNULL PRINTF_FORMAT(1, 2) alloc_print(char const *NONNULL fmt, ...);
+struct str PRINTF_FORMAT(1, 2) alloc_print_str(char const *NONNULL fmt, ...);
+
 // Strings
 // Strings are assumed to be utf8, but are not enforced.
 // For compatabilty with c, a string still contains a '\0'
@@ -80,3 +83,6 @@ bool str_eq(str str1, str str2);
 str  str_slice_clone(str_slice slice);
 str  str_clone(str s);
 void str_free(str s);
+
+// File utils
+str file_name_with_suffix(str file_name, str suffix);

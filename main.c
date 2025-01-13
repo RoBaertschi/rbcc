@@ -9,6 +9,7 @@
 #include "lexer.h"
 #include "parser.h"
 #include "rbcc.h"
+#include "targets/targets.h"
 
 #define BUFFER_SIZE 1024
 
@@ -42,10 +43,12 @@ void print_help(int exit_code, str program_name) {
 }
 
 int main(int argc, char **argv) {
+    (void)argc;
     arg_kind print_mode   = ARG_PRINT_ALL;
 
     str      program_name = get_program_name(argv[0]);
-    char    *file_name    = NULL;
+    bool found_file_name = false;
+    str file_name;
     argv += 1; // skip the first argument
     while (*argv != NULL) {
         switch (**argv) {
@@ -71,8 +74,9 @@ int main(int argc, char **argv) {
                 }
                 break;
             default:
-                if (file_name == NULL) {
-                    file_name = *argv;
+                if (!found_file_name) {
+                    file_name = (str){.data = (u8*)*argv, .len = strlen(*argv)};
+                    found_file_name = true;
                 } else {
                     printf("unknown argument \"%s\"\n", *argv);
                     print_help(1, program_name);
@@ -81,12 +85,12 @@ int main(int argc, char **argv) {
         argv += 1;
     }
 
-    if (file_name == NULL) {
+    if (!found_file_name) {
         printf("no input file specified \"%s\"\n", *argv);
         print_help(1, program_name);
     }
 
-    FILE *file = fopen(file_name, "r");
+    FILE *file = fopen((char*)file_name.data, "r");
     if (file == NULL) {
         fprintf(stderr, "Could not open file %s\n", argv[1]);
         return 1;
@@ -139,6 +143,10 @@ int main(int argc, char **argv) {
     if (print_mode != ARG_PRINT_AST) {
         ir_program_print(&ir_program);
     }
+
+    str with_suffix = file_name_with_suffix(file_name, S("fasm"));
+    code_gen((char const*)with_suffix.data, TARGET_X86_64_LINUX, ir_program);
+    str_free(with_suffix);
 
     ir_program_free(&ir_program);
 

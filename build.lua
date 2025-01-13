@@ -11,6 +11,7 @@ local files = {
 	"parser.c",
 	"ir.c",
 	"emit_ir.c",
+	"files.c",
 	"targets/x86_64-linux.c",
 	"targets/targets.c",
 }
