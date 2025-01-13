@@ -1,3 +1,4 @@
+#define _POSIX_C_SOURCE 200809L
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdio.h>
@@ -9,6 +10,8 @@
 #include "lexer.h"
 #include "parser.h"
 #include "rbcc.h"
+
+#include "subprocess.h"
 #include "targets/targets.h"
 
 #define BUFFER_SIZE 1024
@@ -34,21 +37,82 @@ str get_program_name(char *argv) {
 }
 
 void print_help(int exit_code, str program_name) {
-    printf("%s [--print] FILE\n", program_name.data);
+    printf("%s FILE\n", program_name.data);
     printf("  --help       # Print this help\n");
     printf("  --print=all  # Print the ast and ir to stdout\n");
     printf("  --print=ast  # Print the ast to stdout\n");
     printf("  --print=ir   # Print the ir to stdout\n");
     printf("  --no-emit    # Do not emit any assembly or executables\n");
+    printf("  -o FILE      # Specify the output file for the executable\n");
     exit(exit_code);
+}
+
+str fread_full(FILE *file) {
+    u8    *string  = NULL;
+    size_t str_len = 0;
+    while (true) {
+        char   buffer[BUFFER_SIZE];
+        size_t read =
+            fread(buffer, sizeof(buffer) / BUFFER_SIZE, BUFFER_SIZE, file);
+
+        if (string == NULL) {
+            string  = xmalloc(read);
+            str_len = read;
+            memcpy(string, buffer, read);
+        } else {
+            string = realloc(string, str_len + read);
+            CHECK_ALLOC(string);
+            memcpy(string + str_len, buffer, read), str_len += read;
+        }
+
+        if (read < BUFFER_SIZE) {
+            break;
+        }
+    }
+
+    string = realloc(string, str_len + 1);
+    CHECK_ALLOC(string);
+    string[str_len] = 0;
+
+    return (str){
+        .data = string,
+        .len  = str_len,
+    };
+}
+
+bool launch_program(char const *const *args, str *in_out, str *in_err) {
+
+    struct subprocess_s s;
+    if (subprocess_create(args, subprocess_option_inherit_environment | subprocess_option_search_user_path, &s) !=
+        0) {
+        return false;
+    }
+    int result = 0;
+    if (subprocess_join(&s, &result) != 0) {
+        subprocess_destroy(&s);
+        return false;
+    }
+
+    FILE *out = subprocess_stdout(&s), *err = subprocess_stderr(&s);
+
+    *in_out = fread_full(out);
+    *in_err = fread_full(err);
+
+    if (result != 0) {
+        subprocess_destroy(&s);
+        return false;
+    }
+
+    subprocess_destroy(&s);
+    return true;
 }
 
 int main(int argc, char **argv) {
     (void)argc;
-    arg_kind print_mode      = ARG_PRINT_ALL;
+    arg_kind print_mode       = ARG_PRINT_ALL;
 
-    str      program_name    = get_program_name(argv[0]);
-    bool     found_input_file, found_output_file = false;
+    str      program_name     = get_program_name(argv[0]);
+    bool     found_input_file = false, found_output_file = false;
     str      input_file, output_file;
     bool     emit = true;
     argv += 1; // skip the first argument
@@ -70,6 +134,18 @@ int main(int argc, char **argv) {
                                (str){.data = (u8 *)*argv, .len = strlen(*argv)},
                                S("--no-emit"))) {
                     emit = false;
+                } else if (str_eq(
+                               (str){.data = (u8 *)*argv, .len = strlen(*argv)},
+                               S("-o"))) {
+                    argv += 1;
+                    if (*argv == NULL) {
+                        printf("expected file, got no more arguments\n");
+                        print_help(1, program_name);
+                    } else {
+                        output_file =
+                            (str){.data = (u8 *)*argv, .len = strlen(*argv)};
+                        found_output_file = true;
+                    }
                 } else if (str_eq(
                                (str){.data = (u8 *)*argv, .len = strlen(*argv)},
                                S("--help"))) {
@@ -94,6 +170,11 @@ int main(int argc, char **argv) {
 
     if (!found_input_file) {
         printf("no input file specified \"%s\"\n", *argv);
+        print_help(1, program_name);
+    }
+
+    if (!found_output_file) {
+        printf("no output file specified");
         print_help(1, program_name);
     }
 
@@ -152,10 +233,26 @@ int main(int argc, char **argv) {
     }
 
     if (emit) {
-        str with_suffix = file_name_with_suffix(input_file, S("fasm"));
-        code_gen((char const *)with_suffix.data, TARGET_X86_64_LINUX,
-                 ir_program);
-        str_free(with_suffix);
+        str fasm_file = file_name_with_suffix(input_file, S("fasm"));
+        str o_file    = file_name_with_suffix(input_file, S("o"));
+
+        code_gen((char const *)fasm_file.data, TARGET_X86_64_LINUX, ir_program);
+
+        str out, err;
+        if (launch_program((char const *const[]){"fasm", (char *)fasm_file.data,
+                                                 (char *)o_file.data, NULL}, &out, &err)) {
+            if (!launch_program(
+                    (char const *const[]){"gcc", (char *)o_file.data, "-o",
+                                          (char *)output_file.data, NULL}, &out, &err)) {
+                printf("failed to run gcc\n%s\n%s\n", out.data, err.data);
+            }
+        } else {
+                printf("failed to run fasm\n%s\n%s\n", out.data, err.data);
+        }
+        remove((char *)fasm_file.data);
+        remove((char *)o_file.data);
+        str_free(fasm_file);
+        str_free(o_file);
     }
 
     ir_program_free(&ir_program);
