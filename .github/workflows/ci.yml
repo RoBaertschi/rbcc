@@ -20,7 +20,7 @@ jobs:
           ./build/* 
           ./ninja
     - name: install lua and gcc
-      run: sudo apt install -y gcc lua5.4 python3
+      run: sudo apt install -y gcc lua5.4 python3 fasm
     - name: setup
       run: ./ci.sh setup
     - name: build
