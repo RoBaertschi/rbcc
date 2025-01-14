@@ -316,6 +316,18 @@ token lexer_scan_token(lexer *l) {
             case -1:
                 kind = TEOF;
                 break;
+            case '+':
+                kind = TPLUS;
+                break;
+            case '-':
+                kind = TMINUS;
+                break;
+            case '*':
+                kind = TASTERISK;
+                break;
+            case '/':
+                kind = TSLASH;
+                break;
             case '(':
                 kind = TOPEN_PAREN;
                 break;

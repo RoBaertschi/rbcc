@@ -7,6 +7,8 @@
 
 typedef enum precedence {
     PLOWEST,
+    PSUM,
+    PPRODUCT,
 } precedence;
 
 static void default_error_callback(token tok, char const *fmt, va_list arg) {
@@ -107,6 +109,12 @@ static bool tok_peek_is(parser *NONNULL p, token_kind kind) {
 
 precedence get_precedence(token_kind kind) {
     switch (kind) {
+        case TPLUS:
+        case TMINUS:
+            return PSUM;
+        case TASTERISK:
+        case TSLASH:
+            return PPRODUCT;
         default:
             return PLOWEST;
     }
@@ -120,10 +128,38 @@ precedence cur_precedence(parser *NONNULL p) {
     return get_precedence(p->cur_token.kind);
 }
 
+static expr *NULLABLE parse_expr(parser *NONNULL p, precedence prec);
+
 static expr *NULLABLE parse_constant(parser *p) {
     expect(TCONSTANT);
 
     return EXPR_NEW(expr_constant, p->cur_token, p->cur_token.data.constant);
+}
+
+static expr *NULLABLE parse_binary(parser *p, expr* lhs) {
+    binary_operator op;
+    token root = p->cur_token;
+    switch (p->cur_token.kind) {
+        case TPLUS:
+            op = BOP_ADD;
+            break;
+        case TMINUS:
+            op = BOP_SUB;
+            break;
+        case TASTERISK:
+            op = BOP_MUL;
+            break;
+        case TSLASH:
+            op = BOP_DIV;
+            break;
+        default:
+            error(p, p->cur_token, "invalid token for binary expression\n");
+            return NULL;
+    }
+
+    next_token(p);
+    expr *rhs = parse_expr(p, get_precedence(root.kind));
+    return EXPR_NEW(expr_binary, root, op, lhs, rhs);
 }
 
 static expr *NULLABLE parse_expr(parser *NONNULL p, precedence prec) {
@@ -216,6 +252,11 @@ parser *NONNULL parser_new_ex(lexer *l, parser_error_callback NULLABLE ec,
     };
 
     register_prefix_fn(p, parse_constant, TCONSTANT);
+
+    register_infix_fn(p, parse_binary, TPLUS);
+    register_infix_fn(p, parse_binary, TMINUS);
+    register_infix_fn(p, parse_binary, TASTERISK);
+    register_infix_fn(p, parse_binary, TSLASH);
 
     next_token(p);
     next_token(p);

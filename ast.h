@@ -63,20 +63,42 @@ void          stmt_free(stmt *NULLABLE stmt);
 #define STMT_NEW(tag, ...) \
     stmt_new((stmt){tag, {.tag = (struct tag){__VA_ARGS__}}})
 
+#define BINARY_OPERATORS \
+    _X(BOP_ADD, +)       \
+    _X(BOP_SUB, -)       \
+    _X(BOP_MUL, *)       \
+    _X(BOP_DIV, /)
+
+typedef enum binary_operator {
+#define _X(op, ...) op,
+    BINARY_OPERATORS
+#undef _X
+    BOP_MAX,
+} binary_operator;
+
+extern char const *const binary_operator_strs[];
+char const* binary_operator_str(binary_operator op);
+
 struct expr {
     enum {
-        expr_string,
         expr_constant,
+        expr_binary,
+        expr_string,
         expr_function_call,
     } tag;
     token root_token;
     union {
-        struct expr_string {
-            str content; // this is owned
-        } expr_string;
         struct expr_constant {
             i64 value;
         } expr_constant;
+        struct expr_binary {
+            binary_operator op;
+            expr *NONNULL   lhs;
+            expr *NONNULL   rhs;
+        } expr_binary;
+        struct expr_string {
+            str content; // this is owned
+        } expr_string;
         struct expr_function_call {
             expr_list params;
         } expr_function_call;

@@ -120,6 +120,19 @@ void expr_list_free(expr_list list) {
     free(list.data);
 }
 
+char const *const binary_operator_strs[] = {
+#define _X(op, symbol) [op] = #symbol,
+    BINARY_OPERATORS
+#undef _X
+};
+
+char const* binary_operator_str(binary_operator op) {
+    if (op >= BOP_MAX || op < 0) {
+        return "UNKNOWN BINARY OPERATOR";
+    }
+    return binary_operator_strs[op];
+}
+
 void expr_print(expr *NONNULL ptr) {
     expr e = *ptr;
     switch (e.tag) {
@@ -138,6 +151,15 @@ void expr_print(expr *NONNULL ptr) {
         case expr_constant: {
             struct expr_constant data = e.data.expr_constant;
             printf("expr_constant(%ld)", data.value);
+            return;
+        }
+        case expr_binary: {
+            struct expr_binary data = e.data.expr_binary;
+            printf("expr_binary(");
+            expr_print(data.lhs);
+            printf(" %s ", binary_operator_str(data.op));
+            expr_print(data.rhs);
+            printf(")");
             return;
         }
     }
@@ -172,6 +194,13 @@ void expr_free(expr *NULLABLE ptr) {
         }
         case expr_constant: {
             /*struct expr_constant data = e.data.expr_constant;*/
+            free(ptr);
+            return;
+        }
+        case expr_binary: {
+            struct expr_binary data = e.data.expr_binary;
+            expr_free(data.lhs);
+            expr_free(data.rhs);
             free(ptr);
             return;
         }

@@ -18,6 +18,11 @@
     _X(CLOSE_PAREN)   \
     _X(EQUAL)         \
     _X(SEMICOLON)     \
+    /* Operators */   \
+    _X(PLUS)          \
+    _X(MINUS)         \
+    _X(ASTERISK)      \
+    _X(SLASH)         \
     /* Keywords */    \
     _X(FN) // Function Keywords
 
