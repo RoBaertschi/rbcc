@@ -126,7 +126,7 @@ char const *const binary_operator_strs[] = {
 #undef _X
 };
 
-char const* binary_operator_str(binary_operator op) {
+char const *binary_operator_str(binary_operator op) {
     if (op >= BOP_MAX || op < 0) {
         return "UNKNOWN BINARY OPERATOR";
     }

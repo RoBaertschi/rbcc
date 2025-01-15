@@ -83,8 +83,10 @@ str fread_full(FILE *file) {
 bool launch_program(char const *const *args, str *in_out, str *in_err) {
 
     struct subprocess_s s;
-    if (subprocess_create(args, subprocess_option_inherit_environment | subprocess_option_search_user_path, &s) !=
-        0) {
+    if (subprocess_create(args,
+                          subprocess_option_inherit_environment |
+                              subprocess_option_search_user_path,
+                          &s) != 0) {
         return false;
     }
     int result = 0;
@@ -240,14 +242,16 @@ int main(int argc, char **argv) {
 
         str out, err;
         if (launch_program((char const *const[]){"fasm", (char *)fasm_file.data,
-                                                 (char *)o_file.data, NULL}, &out, &err)) {
+                                                 (char *)o_file.data, NULL},
+                           &out, &err)) {
             if (!launch_program(
                     (char const *const[]){"gcc", (char *)o_file.data, "-o",
-                                          (char *)output_file.data, NULL}, &out, &err)) {
+                                          (char *)output_file.data, NULL},
+                    &out, &err)) {
                 printf("failed to run gcc\n%s\n%s\n", out.data, err.data);
             }
         } else {
-                printf("failed to run fasm\n%s\n%s\n", out.data, err.data);
+            printf("failed to run fasm\n%s\n%s\n", out.data, err.data);
         }
         remove((char *)fasm_file.data);
         remove((char *)o_file.data);

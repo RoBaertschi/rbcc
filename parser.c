@@ -136,9 +136,9 @@ static expr *NULLABLE parse_constant(parser *p) {
     return EXPR_NEW(expr_constant, p->cur_token, p->cur_token.data.constant);
 }
 
-static expr *NULLABLE parse_binary(parser *p, expr* lhs) {
+static expr *NULLABLE parse_binary(parser *p, expr *lhs) {
     binary_operator op;
-    token root = p->cur_token;
+    token           root = p->cur_token;
     switch (p->cur_token.kind) {
         case TPLUS:
             op = BOP_ADD;

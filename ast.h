@@ -73,11 +73,11 @@ typedef enum binary_operator {
 #define _X(op, ...) op,
     BINARY_OPERATORS
 #undef _X
-    BOP_MAX,
+        BOP_MAX,
 } binary_operator;
 
 extern char const *const binary_operator_strs[];
-char const* binary_operator_str(binary_operator op);
+char const              *binary_operator_str(binary_operator op);
 
 struct expr {
     enum {

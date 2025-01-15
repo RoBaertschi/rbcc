@@ -20,6 +20,20 @@ ir_expr ir_emit_expr(expr *ptr) {
                 .result = IR_VALUE_NEW(value_constant, data.value),
             };
         }
+        case expr_binary: {
+            struct expr_binary     data   = e.data.expr_binary;
+
+            ir_instructions_buffer buffer = ir_instructions_buffer_new(1);
+
+            ir_instructions_buffer_push(
+                &buffer, ir_instruction_new(
+                             data.op + INST_ADD, ir_value *_Nullable lhs,
+                             ir_value *_Nullable rhs, ir_value *_Nullable dst));
+
+            return (ir_expr){.insts = ir_instructions_new};
+
+            break;
+        }
         case expr_string:
         case expr_function_call:
             printf("Reached unimplemented expr ir emitission");
@@ -43,7 +57,7 @@ ir_function *NONNULL ir_emit_function(stmt *ptr) {
             ir_instructions_buffer b    = ir_instructions_buffer_new(1);
             ir_instructions_buffer_append(&b, expr.insts);
             ir_instructions_buffer_push(
-                &b, ir_instruction_new(INST_RET, expr.result, NULL));
+                &b, ir_instruction_new(INST_RET, expr.result, NULL, NULL));
 
             ir_instructions insts = ir_instructions_new(b);
 

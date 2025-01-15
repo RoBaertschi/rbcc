@@ -116,8 +116,19 @@ ir_value *NONNULL ir_value_new(ir_value value) {
 
 void ir_value_free(ir_value *NONNULL value) { free(value); }
 
+void ir_value_print_invalid(ir_value *NULLABLE value) {
+    if (value) {
+        ir_value_print(value);
+    } else {
+        printf("(invalid operand)");
+    }
+}
+
 void ir_instruction_print(ir_instruction *NONNULL inst) {
-    ir_instruction i = *inst;
+    ir_instruction i    = *inst;
+
+    char const    *temp = "(unset temp)";
+
     switch (i.kind) {
         case INST_RET:
             printf("  RET ");
@@ -128,13 +139,39 @@ void ir_instruction_print(ir_instruction *NONNULL inst) {
             }
 
             printf("\n");
+            break;
+
+        // Binary Instructions
+        case INST_ADD:
+            temp = "ADD";
+            goto print_binary;
+        case INST_SUB:
+            temp = "SUB";
+            goto print_binary;
+        case INST_MUL:
+            temp = "MUL";
+            goto print_binary;
+        case INST_DIV:
+            temp = "DIV";
+            goto print_binary;
+
+        print_binary:
+            printf("  ");
+            ir_value_print_invalid(i.dst);
+            printf(" = %s ", temp);
+            ir_value_print_invalid(i.lhs);
+            printf(", ");
+            ir_value_print_invalid(i.rhs);
+            printf("\n");
+            break;
     }
 }
 
 ir_instruction ir_instruction_new(enum ir_instruction_kind kind,
                                   ir_value *NULLABLE       lhs,
-                                  ir_value *NULLABLE       rhs) {
-    return (ir_instruction){kind, lhs, rhs};
+                                  ir_value *NULLABLE       rhs,
+                                  ir_value *NULLABLE       dst) {
+    return (ir_instruction){kind, lhs, rhs, dst, NULL};
 }
 
 void ir_instruction_free(ir_instruction inst) {
@@ -142,6 +179,9 @@ void ir_instruction_free(ir_instruction inst) {
         ir_value_free(inst.lhs);
     }
     if (inst.rhs != NULL) {
+        ir_value_free(inst.rhs);
+    }
+    if (inst.dst != NULL) {
         ir_value_free(inst.rhs);
     }
 }

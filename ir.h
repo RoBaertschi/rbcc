@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stddef.h>
+#include "ast.h"
 #include "rbcc.h"
 
 // Typedefs
@@ -71,13 +72,19 @@ void              ir_value_free(ir_value *NONNULL value);
 struct ir_instruction {
     enum ir_instruction_kind {
         INST_RET, // uses lhs for value, ignores rhs
+        INST_ADD, // uses lhs, rhs, and dst
+        INST_SUB, // uses lhs, rhs, and dst
+        INST_MUL, // uses lhs, rhs, and dst
+        INST_DIV, // uses lhs, rhs, and dst
     } kind;
     ir_value *NULLABLE lhs, *NULLABLE rhs;
+    ir_value *NULLABLE dst;
 };
 
 void           ir_instruction_print(ir_instruction *NONNULL inst);
 ir_instruction ir_instruction_new(enum ir_instruction_kind kind,
                                   ir_value *NULLABLE       lhs,
-                                  ir_value *NULLABLE       rhs);
+                                  ir_value *NULLABLE       rhs,
+                                  ir_value *NULLABLE       dst);
 
 void           ir_instruction_free(ir_instruction inst);
