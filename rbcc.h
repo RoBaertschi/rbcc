@@ -86,3 +86,8 @@ void str_free(str s);
 
 // File utils
 str file_name_with_suffix(str file_name, str suffix);
+
+// Other utils
+
+// Returns a unique string in this format: 'tmp.X'
+str str_unique(void);

@@ -58,3 +58,9 @@ str str_clone(str s) {
 }
 
 void str_free(str s) { free(s.data); }
+
+
+str str_unique(void) {
+    static u64 counter = 0;
+    return alloc_print_str("tmp.%ld", counter++);
+}

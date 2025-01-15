@@ -5,6 +5,11 @@
 #include "ir.h"
 #include "rbcc.h"
 
+ir_value *make_temp(void) {
+    str temp = str_unique();
+    return IR_VALUE_NEW(value_temp, temp);
+}
+
 typedef struct ir_expr {
     ir_instructions   insts;
     ir_value *NONNULL result;
@@ -25,12 +30,14 @@ ir_expr ir_emit_expr(expr *ptr) {
 
             ir_instructions_buffer buffer = ir_instructions_buffer_new(1);
 
+            ir_value *lhs = make_temp(), *rhs = make_temp(), *dst = make_temp();
+
             ir_instructions_buffer_push(
                 &buffer, ir_instruction_new(
-                             data.op + INST_ADD, ir_value *_Nullable lhs,
-                             ir_value *_Nullable rhs, ir_value *_Nullable dst));
+                             data.op + INST_ADD, lhs,
+                             rhs, dst));
 
-            return (ir_expr){.insts = ir_instructions_new};
+            return (ir_expr){.insts = ir_instructions_new(buffer)};
 
             break;
         }

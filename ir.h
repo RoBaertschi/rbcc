@@ -1,7 +1,6 @@
 #pragma once
 
 #include <stddef.h>
-#include "ast.h"
 #include "rbcc.h"
 
 // Typedefs
@@ -54,16 +53,19 @@ void ir_function_print(ir_function *NONNULL function);
 void ir_function_free(ir_function *NONNULL function);
 
 struct ir_value {
-    enum ir_value_kind { value_constant } tag;
+    enum ir_value_kind { value_constant, value_temp } tag;
     union {
         struct value_constant {
             i64 value;
         } value_constant;
+        struct value_temp {
+            str value;
+        } value_temp;
     } data;
 };
 
 #define IR_VALUE_NEW(kind, ...) \
-    ir_value_new((ir_value){kind, {(struct kind){__VA_ARGS__}}})
+    ir_value_new((ir_value){kind, {.kind = (struct kind){__VA_ARGS__}}})
 
 void              ir_value_print(ir_value *NONNULL value);
 ir_value *NONNULL ir_value_new(ir_value value);
