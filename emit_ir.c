@@ -10,6 +10,20 @@ ir_value *make_temp(void) {
     return IR_VALUE_NEW(value_temp, temp);
 }
 
+ir_value *make_copy(ir_value *ptr) {
+    ir_value value = *ptr;
+    switch (value.tag) {
+        case value_constant: {
+            /*struct value_constant data = value.data.value_constant;*/
+            return ptr;
+        }
+        case value_temp: {
+            struct value_temp data = value.data.value_temp;
+            return IR_VALUE_NEW(value_temp, str_clone(data.value));
+        }
+    }
+}
+
 typedef struct ir_expr {
     ir_instructions   insts;
     ir_value *NONNULL result;
@@ -26,20 +40,25 @@ ir_expr ir_emit_expr(expr *ptr) {
             };
         }
         case expr_binary: {
-            struct expr_binary     data   = e.data.expr_binary;
+            struct expr_binary     data     = e.data.expr_binary;
 
-            ir_instructions_buffer buffer = ir_instructions_buffer_new(1);
+            ir_instructions_buffer buffer   = ir_instructions_buffer_new(1);
 
-            ir_value *lhs = make_temp(), *rhs = make_temp(), *dst = make_temp();
+            ir_expr                lhs_expr = ir_emit_expr(data.lhs);
+            ir_instructions_buffer_append(&buffer, lhs_expr.insts);
+            ir_expr                rhs_expr = ir_emit_expr(data.rhs);
+            ir_instructions_buffer_append(&buffer, rhs_expr.insts);
+
+            ir_value              *lhs      = make_copy(lhs_expr.result);
+            ir_value              *rhs      = make_copy(rhs_expr.result);
+            ir_value              *dst      = make_temp();
 
             ir_instructions_buffer_push(
-                &buffer, ir_instruction_new(
-                             data.op + INST_ADD, lhs,
-                             rhs, dst));
+                &buffer,
+                ir_instruction_new(data.op + INST_ADD, lhs, rhs, dst));
 
-            return (ir_expr){.insts = ir_instructions_new(buffer)};
-
-            break;
+            return (ir_expr){.insts  = ir_instructions_new(buffer),
+                             .result = make_copy(dst)};
         }
         case expr_string:
         case expr_function_call:

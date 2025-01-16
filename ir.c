@@ -46,7 +46,8 @@ void ir_instructions_buffer_push(ir_instructions_buffer *NONNULL buffer,
 void ir_instructions_buffer_append(ir_instructions_buffer *NONNULL buffer,
                                    ir_instructions                 list) {
     ir_instructions_buffer_ensure_size(buffer, buffer->len + list.len);
-    memcpy(buffer->data + buffer->len, list.data, list.len);
+    memcpy(buffer->data + buffer->len, list.data, list.len * sizeof(ir_instruction));
+    buffer->len += list.len;
     ir_instructions_free(
         list); // we take ownership of all the values in the list,
                // because of that, we don't have to free the data
@@ -104,6 +105,12 @@ void ir_value_print(ir_value *NONNULL value) {
         case value_constant: {
             struct value_constant data = v.data.value_constant;
             printf("%ld", data.value);
+            break;
+        }
+        case value_temp: {
+            struct value_temp data = v.data.value_temp;
+            printf("%%%s", data.value.data);
+            break;
         }
     }
 }
@@ -171,7 +178,7 @@ ir_instruction ir_instruction_new(enum ir_instruction_kind kind,
                                   ir_value *NULLABLE       lhs,
                                   ir_value *NULLABLE       rhs,
                                   ir_value *NULLABLE       dst) {
-    return (ir_instruction){kind, lhs, rhs, dst, NULL};
+    return (ir_instruction){.kind = kind, .lhs = lhs, .rhs = rhs, .dst = dst};
 }
 
 void ir_instruction_free(ir_instruction inst) {
@@ -182,6 +189,6 @@ void ir_instruction_free(ir_instruction inst) {
         ir_value_free(inst.rhs);
     }
     if (inst.dst != NULL) {
-        ir_value_free(inst.rhs);
+        ir_value_free(inst.dst);
     }
 }

@@ -1,4 +1,6 @@
+#if defined (__linux__) || defined (__unix__)
 #define _POSIX_C_SOURCE 200809L
+#endif
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdio.h>

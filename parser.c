@@ -276,7 +276,7 @@ void parser_free(parser *NONNULL p) {
     {
         struct infix_parse_fn_entry *el, *tmp;
         HASH_ITER(hh, p->infix_parse_fns, el, tmp) {
-            HASH_DEL(p->prefix_parse_fns, el);
+            HASH_DEL(p->infix_parse_fns, el);
             free(el);
         }
     }
