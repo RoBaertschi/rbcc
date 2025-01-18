@@ -91,3 +91,4 @@ str file_name_with_suffix(str file_name, str suffix);
 
 // Returns a unique string in this format: 'tmp.X'
 str str_unique(void);
+

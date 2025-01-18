@@ -121,7 +121,21 @@ ir_value *NONNULL ir_value_new(ir_value value) {
     return ptr;
 }
 
-void ir_value_free(ir_value *NONNULL value) { free(value); }
+void ir_value_free(ir_value *NONNULL ptr) { 
+    ir_value value = *ptr;
+    switch (ptr->tag) {
+        case value_constant: {
+            break;
+        }
+        case value_temp: {
+            struct value_temp data = value.data.value_temp;
+            str_free(data.value);
+            break;
+        }
+    }
+
+    free(ptr); 
+}
 
 void ir_value_print_invalid(ir_value *NULLABLE value) {
     if (value) {
